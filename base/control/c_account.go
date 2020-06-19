@@ -8,13 +8,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pojol/braid/rpc/client"
+	"github.com/pojol/braid/module/rpc/client"
 )
 
 // Rename 游客登录
 func Rename(ctx context.Context, reqBody []byte) (interface{}, error) {
 	res := proto.RenameRes{}
 	req := proto.RenameReq{}
+	mailRes := &api.SendMailRes{}
 	var err error
 
 	err = json.Unmarshal(reqBody, &req)
@@ -24,24 +25,14 @@ func Rename(ctx context.Context, reqBody []byte) (interface{}, error) {
 
 	fmt.Println("rename")
 
-	conn, err := client.GetConn("mail")
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Put()
-
-	cc := api.NewMailClient(conn.ClientConn)
-	rres, err := cc.Send(ctx, &api.SendMailReq{
+	client.Invoke(ctx, "mail", "/api.mail/send", &api.SendMailReq{
 		Accountid: "testaccountid",
 		Body: &api.MailBody{
 			Title: "testTitle",
 		},
-	})
-	if err != nil {
-		conn.Unhealthy()
-	}
+	}, mailRes)
 
-	if rres.Errcode != int32(errcode.Succ) {
+	if mailRes.Errcode != int32(errcode.Succ) {
 		//
 	}
 

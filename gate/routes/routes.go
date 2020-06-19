@@ -6,17 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pojol/braid/rpc/client"
-	"github.com/pojol/braid/rpc/client/bproto"
+	"github.com/pojol/braid/module/rpc/client"
+	"github.com/pojol/braid/module/rpc/client/bproto"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pojol/braid/cache/pool"
 )
 
 func routing(ctx echo.Context, nodName string, serviceName string, token string) error {
 	var err error
-	var conn *pool.ClientConn
-	var cc bproto.ListenClient
 	res := &bproto.RouteRes{}
 	var in []byte
 
@@ -25,23 +22,13 @@ func routing(ctx echo.Context, nodName string, serviceName string, token string)
 		goto EXT
 	}
 
-	conn, err = client.GetConn(nodName)
-	if err != nil {
-		goto EXT
-	}
-	defer conn.Put()
-
-	fmt.Println("routeing", nodName, serviceName, conn.ClientConn.Target())
-
-	cc = bproto.NewListenClient(conn.ClientConn)
-	res, err = cc.Routing(ctx.Request().Context(), &bproto.RouteReq{
+	client.Invoke(ctx.Request().Context(), nodName, "/bproto.listen/routing", &bproto.RouteReq{
 		Nod:     nodName,
 		Service: serviceName,
 		ReqBody: in,
-	})
-	if err != nil {
-		conn.Unhealthy()
-	}
+	}, res)
+
+	fmt.Println("routeing", nodName, serviceName)
 
 EXT:
 	if err != nil {

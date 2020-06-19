@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pojol/braid/rpc/client/bproto"
+	"github.com/pojol/braid/module/rpc/client/bproto"
 )
 
 // RouteServer 路由服务器

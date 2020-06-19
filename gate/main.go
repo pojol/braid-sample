@@ -10,12 +10,14 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"syscall"
+	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pojol/braid/log"
-	"github.com/pojol/braid/rpc/client"
-	"github.com/pojol/braid/service/election"
-	"github.com/pojol/braid/tracer"
+	"github.com/pojol/braid/3rd/log"
+	"github.com/pojol/braid/module/election"
+	"github.com/pojol/braid/module/rpc/client"
+	"github.com/pojol/braid/module/tracer"
+	"github.com/pojol/braid/plugin/election/consulelection"
 )
 
 var (
@@ -66,10 +68,13 @@ func main() {
 		Suffex: ".sys",
 	}))
 
-	elec, err := election.New(NodeName, consulAddr)
-	if err != nil {
-		log.Fatalf("election.New", err)
-	}
+	elec := election.GetBuilder(consulelection.ElectionName).Build(consulelection.Cfg{
+		Address:           consulAddr,
+		Name:              NodeName,
+		LockTick:          time.Second * 2,
+		RefushSessionTick: time.Second * 2,
+	})
+
 	elec.Run()
 	defer elec.Close()
 
@@ -87,7 +92,7 @@ func main() {
 
 	//go gatemid.Tick()
 
-	err = e.Start(":1202")
+	err := e.Start(":1202")
 	if err != nil {
 		//log.Fatalf("start echo err", err)
 	}

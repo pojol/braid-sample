@@ -7,11 +7,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	"github.com/pojol/braid/log"
-	"github.com/pojol/braid/rpc/server"
-	"github.com/pojol/braid/service/election"
-	"github.com/pojol/braid/tracer"
+	"github.com/pojol/braid/3rd/log"
+	"github.com/pojol/braid/module/election"
+	"github.com/pojol/braid/module/rpc/server"
+	"github.com/pojol/braid/module/tracer"
+	"github.com/pojol/braid/plugin/election/consulelection"
 )
 
 var (
@@ -51,10 +53,12 @@ func main() {
 	}))
 	defer l.Close()
 
-	elec, err := election.New(NodeName, consulAddr)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	elec := election.GetBuilder(consulelection.ElectionName).Build(consulelection.Cfg{
+		Address:           consulAddr,
+		Name:              NodeName,
+		LockTick:          time.Second * 2,
+		RefushSessionTick: time.Second * 2,
+	})
 	elec.Run()
 
 	tr := tracer.New(NodeName, jaegerAddr)
