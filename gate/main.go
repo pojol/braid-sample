@@ -17,7 +17,7 @@ import (
 	"github.com/pojol/braid/module/election"
 	"github.com/pojol/braid/module/rpc/client"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/election/consulelection"
+	"github.com/pojol/braid/plugin/election/k8selector"
 )
 
 var (
@@ -51,6 +51,8 @@ func main() {
 	}()
 
 	initFlag()
+	var kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	var nodeID = flag.String("node-id", "", "node id used for leader election")
 
 	flag.Parse()
 	if help {
@@ -68,18 +70,20 @@ func main() {
 		Suffex: ".sys",
 	}))
 
-	elec := election.GetBuilder(consulelection.ElectionName).Build(consulelection.Cfg{
-		Address:           consulAddr,
-		Name:              NodeName,
-		LockTick:          time.Second * 2,
-		RefushSessionTick: time.Second * 2,
-	})
-
-	elec.Run()
-	defer elec.Close()
-
 	tr := tracer.New(NodeName, jaegerAddr)
 	tr.Init()
+
+	elec, err := election.GetBuilder(k8selector.ElectionName).Build(k8selector.Cfg{
+		KubeCfg:     *kubeconfig,
+		NodID:       *nodeID,
+		Namespace:   "default",
+		RetryPeriod: time.Second * 2,
+	})
+	if err != nil {
+		log.Fatalf("elector build err", err)
+	}
+
+	elec.Run()
 
 	rpcClient := client.New(NodeName, consulAddr, client.WithTracing())
 	rpcClient.Discover()
@@ -92,9 +96,9 @@ func main() {
 
 	//go gatemid.Tick()
 
-	err := e.Start(":1202")
+	err = e.Start(":1202")
 	if err != nil {
-		//log.Fatalf("start echo err", err)
+		log.Fatalf("start echo err", err)
 	}
 
 	ch := make(chan os.Signal)

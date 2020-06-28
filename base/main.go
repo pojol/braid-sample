@@ -54,12 +54,15 @@ func main() {
 	}))
 	defer l.Close()
 
-	elec := election.GetBuilder(consulelection.ElectionName).Build(consulelection.Cfg{
+	elec, err := election.GetBuilder(consulelection.ElectionName).Build(consulelection.Cfg{
 		Address:           consulAddr,
 		Name:              NodeName,
 		LockTick:          time.Second * 2,
 		RefushSessionTick: time.Second * 2,
 	})
+	if err != nil {
+		log.Fatalf("elector build err", err)
+	}
 	elec.Run()
 
 	tr := tracer.New(NodeName, jaegerAddr)
