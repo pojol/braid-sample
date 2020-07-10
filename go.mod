@@ -8,6 +8,7 @@ require (
 	github.com/pojol/braid v1.1.44
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 	google.golang.org/grpc v1.27.1
-	k8s.io/apimachinery v0.18.4
-	k8s.io/client-go v0.18.4
 )
+
+// 切换到本地包进行测试
+replace github.com/pojol/braid => /Users/pojol/work/gohome/src/braid

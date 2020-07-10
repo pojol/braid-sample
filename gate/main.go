@@ -13,11 +13,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
-	"github.com/pojol/braid/module/election"
-	"github.com/pojol/braid/module/rpc/client"
+	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/election/k8selector"
 )
 
 var (
@@ -51,8 +50,8 @@ func main() {
 	}()
 
 	initFlag()
-	var kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	var nodeID = flag.String("node-id", "", "node id used for leader election")
+	//var kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	//var nodeID = flag.String("node-id", "", "node id used for leader election")
 
 	flag.Parse()
 	if help {
@@ -70,24 +69,46 @@ func main() {
 		Suffex: ".sys",
 	}))
 
-	tr := tracer.New(NodeName, jaegerAddr)
-	tr.Init()
-
-	elec, err := election.GetBuilder(k8selector.ElectionName).Build(k8selector.Cfg{
-		KubeCfg:     *kubeconfig,
-		NodID:       *nodeID,
-		Namespace:   "default",
-		RetryPeriod: time.Second * 2,
-	})
+	tr, err := tracer.New(NodeName, jaegerAddr)
 	if err != nil {
-		log.Fatalf("elector build err", err)
+		log.Fatalf("tracer init", err)
 	}
 
-	elec.Run()
+	rc := redis.New()
+	err = rc.Init(redis.Config{
+		Address:        "redis://192.168.50.201:6379/0",
+		ReadTimeOut:    5 * time.Second,
+		WriteTimeOut:   5 * time.Second,
+		ConnectTimeOut: 2 * time.Second,
+		MaxIdle:        16,
+		MaxActive:      128,
+		IdleTimeout:    0,
+	})
+	if err != nil {
+		log.Fatalf("redis init", err)
+	}
 
-	rpcClient := client.New(NodeName, consulAddr, client.WithTracing())
-	rpcClient.Discover()
-	defer rpcClient.Close()
+	/*
+		elec, err := election.GetBuilder(k8selector.ElectionName).Build(k8selector.Cfg{
+			KubeCfg:     *kubeconfig,
+			NodID:       *nodeID,
+			Namespace:   "default",
+			RetryPeriod: time.Second * 2,
+		})
+		if err != nil {
+			log.Fatalf("elector build err", err)
+		}
+
+		elec.Run()
+	*/
+
+	b := braid.New(NodeName)
+	b.RegistPlugin(braid.DiscoverByConsul(consulAddr),
+		braid.BalancerBySwrr(),
+		braid.GRPCClient())
+
+	b.Run()
+	defer b.Close()
 
 	e := echo.New()
 	e.Use(middleware.ReqTrace())
@@ -96,7 +117,7 @@ func main() {
 
 	//go gatemid.Tick()
 
-	err = e.Start(":1202")
+	err = e.Start(":14222")
 	if err != nil {
 		log.Fatalf("start echo err", err)
 	}
@@ -105,6 +126,8 @@ func main() {
 	signal.Notify(ch, syscall.SIGTERM)
 	<-ch
 
+	tr.Close()
+	rc.Close()
 	if err := e.Shutdown(context.TODO()); err != nil {
 		panic(err)
 	}

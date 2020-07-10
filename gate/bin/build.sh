@@ -1,3 +1,3 @@
 #! /bin/bash
 
-docker build -t gateway .
+docker build -t braid-game/gateway .

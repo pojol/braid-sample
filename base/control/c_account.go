@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pojol/braid/module/rpc/client"
+	"github.com/pojol/braid"
 )
 
 // Rename 游客登录
@@ -25,7 +25,7 @@ func Rename(ctx context.Context, reqBody []byte) (interface{}, error) {
 
 	fmt.Println("rename")
 
-	client.Invoke(ctx, "mail", "/api.mail/send", &api.SendMailReq{
+	braid.Client().Invoke(ctx, "mail", "/api.mail/send", "", &api.SendMailReq{
 		Accountid: "testaccountid",
 		Body: &api.MailBody{
 			Title: "testTitle",

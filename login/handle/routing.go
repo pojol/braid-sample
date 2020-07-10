@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/pojol/braid/module/rpc/client/bproto"
+	"github.com/pojol/braid/plugin/rpc/grpcclient/bproto"
 )
 
 // RouteServer 路由服务器
@@ -14,7 +14,7 @@ type RouteServer struct {
 }
 
 // RouteHandle 路由函数句柄
-type RouteHandle func(reqBody []byte) (res interface{}, err error)
+type RouteHandle func(token string, reqBody []byte) (res interface{}, err error)
 
 var (
 	routeMap map[string]RouteHandle
@@ -25,7 +25,7 @@ func (rs *RouteServer) Routing(ctx context.Context, req *bproto.RouteReq) (*bpro
 	res := new(bproto.RouteRes)
 
 	if _, ok := routeMap[req.Service]; ok {
-		ires, err := routeMap[req.Service](req.ReqBody)
+		ires, err := routeMap[req.Service](req.Token, req.ReqBody)
 		if err != nil {
 			return nil, err
 		}

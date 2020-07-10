@@ -9,6 +9,6 @@ ENV SERVICE_TAGS=braid,login
 ENV SERVICE_14101_NAME=login
 
 
-EXPOSE 1201
+EXPOSE 14222
 
 ENTRYPOINT ./login_linux $0 $@

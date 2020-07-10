@@ -1,3 +1,3 @@
 #! /bin/bash
 
-docker build -t base .
+docker build -t braid-game/base .

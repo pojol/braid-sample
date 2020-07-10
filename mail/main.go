@@ -7,13 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
-	"github.com/pojol/braid/module/election"
-	"github.com/pojol/braid/module/rpc/server"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/election/consulelection"
+	"github.com/pojol/braid/plugin/rpc/grpcserver"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -53,29 +52,23 @@ func main() {
 	}))
 	defer l.Close()
 
-	elec, err := election.GetBuilder(consulelection.ElectionName).Build(consulelection.Cfg{
-		Address:           consulAddr,
-		Name:              NodeName,
-		LockTick:          time.Second * 2,
-		RefushSessionTick: time.Second * 2,
-	})
+	tr, err := tracer.New(NodeName, jaegerAddr)
 	if err != nil {
-		log.Fatalf("elector build err", err)
+		log.Fatalf("tracer init", err)
 	}
-	elec.Run()
 
-	tr := tracer.New(NodeName, jaegerAddr)
-	tr.Init()
+	b := braid.New(NodeName)
+	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222"), grpcserver.WithTracing()),
+		braid.ElectorByConsul())
 
-	s := server.New(NodeName, server.WithListen(":1201"), server.WithTracing())
-	api.RegisterMailServer(server.Get(), &handle.MailServer{})
+	api.RegisterMailServer(braid.Server().Server().(*grpc.Server), &handle.MailServer{})
 
-	s.Run()
+	b.Run()
+	defer b.Close()
 
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	<-ch
 
-	elec.Close()
-	s.Close()
+	tr.Close()
 }

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pojol/braid/module/rpc/client"
-	"github.com/pojol/braid/module/rpc/client/bproto"
+	"github.com/pojol/braid"
+	"github.com/pojol/braid/plugin/rpc/grpcclient/bproto"
 
 	"github.com/labstack/echo/v4"
 )
@@ -22,9 +22,10 @@ func routing(ctx echo.Context, nodName string, serviceName string, token string)
 		goto EXT
 	}
 
-	client.Invoke(ctx.Request().Context(), nodName, "/bproto.listen/routing", &bproto.RouteReq{
+	braid.Client().Invoke(ctx.Request().Context(), nodName, "/bproto.listen/routing", token, &bproto.RouteReq{
 		Nod:     nodName,
 		Service: serviceName,
+		Token:   token,
 		ReqBody: in,
 	}, res)
 
