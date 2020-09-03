@@ -9,7 +9,7 @@ import (
 // SendNormal 发送一封默认邮件给指定玩家
 func SendNormal(accid string, body model.MailDat) errcode.Err {
 
-	fmt.Println("send mail ", body.Title)
+	fmt.Println("recv mail title:", body.Title)
 
 	return errcode.Succ
 }

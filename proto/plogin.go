@@ -9,3 +9,8 @@ type GuestLoginReq struct {
 type GuestLoginRes struct {
 	Token string
 }
+
+// LoginOutReq 登出
+type LoginOutReq struct {
+	Token string
+}

@@ -10,16 +10,18 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/rpc/grpcclient/bproto"
-	"github.com/pojol/braid/plugin/rpc/grpcserver"
+	"github.com/pojol/braid/plugin/grpcclient/bproto"
+	"github.com/pojol/braid/plugin/grpcserver"
 	"google.golang.org/grpc"
 )
 
 var (
 	help bool
 
-	consulAddr string
-	jaegerAddr string
+	consulAddr    string
+	jaegerAddr    string
+	nsqLookupAddr string
+	nsqdAddr      string
 
 	// NodeName 节点名
 	NodeName = "login"
@@ -29,6 +31,8 @@ func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
 	flag.StringVar(&consulAddr, "consul", "http://127.0.0.1:8900", "set consul address")
+	flag.StringVar(&nsqLookupAddr, "nsqlookup", "127.0.0.1:4161", "set nsq lookup address")
+	flag.StringVar(&nsqdAddr, "nsqd", "127.0.0.1:4150", "set nsqd address")
 	flag.StringVar(&jaegerAddr, "jaeger", "http://127.0.0.1:9411/api/v2/spans", "set jaeger address")
 }
 
@@ -58,7 +62,12 @@ func main() {
 	}
 
 	b := braid.New(NodeName)
-	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222"), grpcserver.WithTracing()))
+	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222"), grpcserver.WithTracing()),
+		braid.DiscoverByConsul(consulAddr),
+		braid.BalancerBySwrr(),
+		braid.GRPCClient(),
+		braid.ElectorByConsul(consulAddr),
+		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
 

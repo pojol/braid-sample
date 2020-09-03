@@ -10,8 +10,8 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/rpc/grpcclient/bproto"
-	"github.com/pojol/braid/plugin/rpc/grpcserver"
+	"github.com/pojol/braid/plugin/grpcclient/bproto"
+	"github.com/pojol/braid/plugin/grpcserver"
 	"google.golang.org/grpc"
 )
 
@@ -62,7 +62,7 @@ func main() {
 		braid.BalancerBySwrr(),
 		braid.GRPCClient(),
 		braid.GRPCServer(grpcserver.WithListen(":14222"), grpcserver.WithTracing()),
-		braid.ElectorByConsul())
+		braid.ElectorByConsul(consulAddr))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
 

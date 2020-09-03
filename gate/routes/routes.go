@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/plugin/rpc/grpcclient/bproto"
+	"github.com/pojol/braid/plugin/grpcclient/bproto"
 
 	"github.com/labstack/echo/v4"
 )

@@ -76,7 +76,7 @@ func main() {
 
 	rc := redis.New()
 	err = rc.Init(redis.Config{
-		Address:        "redis://192.168.50.201:6379/0",
+		Address:        "redis://192.168.50.100:6379/0",
 		ReadTimeOut:    5 * time.Second,
 		WriteTimeOut:   5 * time.Second,
 		ConnectTimeOut: 2 * time.Second,
