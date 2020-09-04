@@ -16,15 +16,19 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
+	"github.com/pojol/braid/module/pubsub"
 	"github.com/pojol/braid/module/tracer"
+	"github.com/pojol/braid/plugin/linkerredis"
 )
 
 var (
 	help bool
 
-	consulAddr string
-	redisAddr  string
-	jaegerAddr string
+	consulAddr    string
+	redisAddr     string
+	jaegerAddr    string
+	nsqLookupAddr string
+	nsqdAddr      string
 )
 
 const (
@@ -38,6 +42,8 @@ func initFlag() {
 	flag.StringVar(&consulAddr, "consul", "http://127.0.0.1:8900", "set consul address")
 	flag.StringVar(&redisAddr, "redis", "redis://127.0.0.1:6379/0", "set redis address")
 	flag.StringVar(&jaegerAddr, "jaeger", "http://127.0.0.1:9411/api/v2/spans", "set jaeger address")
+	flag.StringVar(&nsqLookupAddr, "nsqlookup", "127.0.0.1:4161", "set nsq lookup address")
+	flag.StringVar(&nsqdAddr, "nsqd", "127.0.0.1:4150", "set nsqd address")
 }
 
 func main() {
@@ -105,7 +111,10 @@ func main() {
 	b := braid.New(NodeName)
 	b.RegistPlugin(braid.DiscoverByConsul(consulAddr),
 		braid.BalancerBySwrr(),
-		braid.GRPCClient())
+		braid.GRPCClient(),
+		braid.ElectorByConsul(consulAddr),
+		braid.LinkerByRedis(),
+		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}))
 
 	b.Run()
 	defer b.Close()
@@ -116,6 +125,9 @@ func main() {
 	e.POST("/*", routes.PostRouting)
 
 	//go gatemid.Tick()
+	braid.Pubsub().Pub(linkerredis.LinkerTopicUnlink, &pubsub.Message{
+		Body: []byte("1"),
+	})
 
 	err = e.Start(":14222")
 	if err != nil {

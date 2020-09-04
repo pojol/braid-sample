@@ -25,7 +25,7 @@ var (
 func (rs *RouteServer) Routing(ctx context.Context, req *bproto.RouteReq) (*bproto.RouteRes, error) {
 	res := new(bproto.RouteRes)
 
-	fmt.Println("base routing")
+	fmt.Println("recv routing")
 
 	if _, ok := routeMap[req.Service]; ok {
 		ires, err := routeMap[req.Service](ctx, req.Token, req.ReqBody)
