@@ -11,7 +11,6 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
-	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/discoverconsul"
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
 	"github.com/pojol/braid/plugin/grpcserver"
@@ -61,14 +60,9 @@ func main() {
 	}))
 	defer l.Close()
 
-	tr, err := tracer.New(NodeName, jaegerAddr)
-	if err != nil {
-		log.Fatalf("tracer init", err)
-	}
-
 	rc := redis.New()
-	err = rc.Init(redis.Config{
-		Address:        "redis://192.168.50.100:6379/0",
+	err := rc.Init(redis.Config{
+		Address:        "redis://192.168.50.201:6379/0",
 		ReadTimeOut:    5 * time.Second,
 		WriteTimeOut:   5 * time.Second,
 		ConnectTimeOut: 2 * time.Second,
@@ -81,13 +75,14 @@ func main() {
 	}
 
 	b := braid.New(NodeName)
-	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222"), grpcserver.WithTracing()),
+	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222")),
 		braid.DiscoverByConsul(consulAddr, discoverconsul.WithBlacklist([]string{"gateway"})),
 		braid.BalancerBySwrr(),
 		braid.GRPCClient(),
 		braid.ElectorByConsul(consulAddr),
 		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}),
-		braid.LinkerByRedis())
+		braid.LinkerByRedis(),
+		braid.JaegerTracing(jaegerAddr))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
 
@@ -97,6 +92,4 @@ func main() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	<-ch
-
-	tr.Close()
 }

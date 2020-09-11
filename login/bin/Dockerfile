@@ -1,5 +1,5 @@
 
-FROM alpine
+FROM golang:alpine
 
 COPY ./login_linux /tmp/app/
 

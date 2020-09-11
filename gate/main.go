@@ -17,7 +17,6 @@ import (
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/pubsub"
-	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/linkerredis"
 )
 
@@ -75,14 +74,9 @@ func main() {
 		Suffex: ".sys",
 	}))
 
-	tr, err := tracer.New(NodeName, jaegerAddr)
-	if err != nil {
-		log.Fatalf("tracer init", err)
-	}
-
 	rc := redis.New()
-	err = rc.Init(redis.Config{
-		Address:        "redis://192.168.50.100:6379/0",
+	err := rc.Init(redis.Config{
+		Address:        "redis://192.168.50.201:6379/0",
 		ReadTimeOut:    5 * time.Second,
 		WriteTimeOut:   5 * time.Second,
 		ConnectTimeOut: 2 * time.Second,
@@ -114,7 +108,8 @@ func main() {
 		braid.GRPCClient(),
 		braid.ElectorByConsul(consulAddr),
 		braid.LinkerByRedis(),
-		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}))
+		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}),
+		braid.JaegerTracing(jaegerAddr))
 
 	b.Run()
 	defer b.Close()
@@ -138,7 +133,6 @@ func main() {
 	signal.Notify(ch, syscall.SIGTERM)
 	<-ch
 
-	tr.Close()
 	rc.Close()
 	if err := e.Shutdown(context.TODO()); err != nil {
 		panic(err)

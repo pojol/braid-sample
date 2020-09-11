@@ -1,5 +1,5 @@
 
-FROM alpine
+FROM centos:7
 
 COPY ./gateway_linux /tmp/app/
 

@@ -58,8 +58,9 @@ func main() {
 	}
 
 	b := braid.New(NodeName)
-	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222"), grpcserver.WithTracing()),
-		braid.ElectorByConsul(consulAddr))
+	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222")),
+		braid.ElectorByConsul(consulAddr),
+		braid.JaegerTracing(jaegerAddr))
 
 	api.RegisterMailServer(braid.Server().Server().(*grpc.Server), &handle.MailServer{})
 

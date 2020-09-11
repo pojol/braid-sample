@@ -9,7 +9,6 @@ import (
 
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
-	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
 	"github.com/pojol/braid/plugin/grpcserver"
 	"google.golang.org/grpc"
@@ -52,17 +51,13 @@ func main() {
 	}))
 	defer l.Close()
 
-	tr, err := tracer.New(NodeName, jaegerAddr)
-	if err != nil {
-		log.Fatalf("tracer init", err)
-	}
-
 	b := braid.New(NodeName)
 	b.RegistPlugin(braid.DiscoverByConsul(consulAddr),
 		braid.BalancerBySwrr(),
 		braid.GRPCClient(),
-		braid.GRPCServer(grpcserver.WithListen(":14222"), grpcserver.WithTracing()),
-		braid.ElectorByConsul(consulAddr))
+		braid.GRPCServer(grpcserver.WithListen(":14222")),
+		braid.ElectorByConsul(consulAddr),
+		braid.JaegerTracing(jaegerAddr))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
 
@@ -72,6 +67,4 @@ func main() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	<-ch
-
-	tr.Close()
 }
