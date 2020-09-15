@@ -17,6 +17,7 @@ import (
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/pubsub"
+	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/linkerredis"
 )
 
@@ -76,7 +77,7 @@ func main() {
 
 	rc := redis.New()
 	err := rc.Init(redis.Config{
-		Address:        "redis://192.168.50.201:6379/0",
+		Address:        redisAddr,
 		ReadTimeOut:    5 * time.Second,
 		WriteTimeOut:   5 * time.Second,
 		ConnectTimeOut: 2 * time.Second,
@@ -109,7 +110,7 @@ func main() {
 		braid.ElectorByConsul(consulAddr),
 		braid.LinkerByRedis(),
 		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}),
-		braid.JaegerTracing(jaegerAddr))
+		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	b.Run()
 	defer b.Close()

@@ -1,0 +1,14 @@
+mail_linux
+mail/bin/run2.sh
+mail/bin/run3.sh
+login/bin/run2.sh
+login/bin/run3.sh
+gate/bin/log/gateway.log
+gate/bin/log/gateway.sys
+gate/bin/gateway_linux
+gate/bin/run2.sh
+gate/bin/run3.sh
+base/bin/base_linux
+base/bin/run2.sh
+base/bin/run3.sh
+login_linux

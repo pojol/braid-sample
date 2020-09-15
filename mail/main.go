@@ -52,15 +52,10 @@ func main() {
 	}))
 	defer l.Close()
 
-	tr, err := tracer.New(NodeName, jaegerAddr)
-	if err != nil {
-		log.Fatalf("tracer init", err)
-	}
-
 	b := braid.New(NodeName)
 	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222")),
 		braid.ElectorByConsul(consulAddr),
-		braid.JaegerTracing(jaegerAddr))
+		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	api.RegisterMailServer(braid.Server().Server().(*grpc.Server), &handle.MailServer{})
 
@@ -71,5 +66,4 @@ func main() {
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	<-ch
 
-	tr.Close()
 }

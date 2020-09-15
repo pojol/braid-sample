@@ -29,8 +29,6 @@ func routing(ctx echo.Context, nodName string, serviceName string, token string)
 		ReqBody: in,
 	}, res)
 
-	fmt.Println("routeing", token, nodName, serviceName)
-
 EXT:
 	if err != nil {
 		fmt.Println("routes", "routing", err.Error())

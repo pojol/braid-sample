@@ -4,7 +4,6 @@ import (
 	"braid-game/base/control"
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
 )
@@ -24,8 +23,6 @@ var (
 // Routing 接收外界路由过来的（通常是gate）消息
 func (rs *RouteServer) Routing(ctx context.Context, req *bproto.RouteReq) (*bproto.RouteRes, error) {
 	res := new(bproto.RouteRes)
-
-	fmt.Println("recv routing")
 
 	if _, ok := routeMap[req.Service]; ok {
 		ires, err := routeMap[req.Service](ctx, req.Token, req.ReqBody)
