@@ -9,6 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.1.6
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pojol/braid v1.1.44
+	github.com/pojol/gobot v1.1.5 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 	google.golang.org/grpc v1.27.1
 )

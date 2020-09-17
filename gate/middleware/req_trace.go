@@ -20,11 +20,19 @@ var (
 	}
 
 	qps uint64 = 0
-	use int64  = 0
 )
 
 // ReqTrace 获取基于默认配置的trace
 func ReqTrace() echo.MiddlewareFunc {
+	/*
+		go func() {
+			for {
+				fmt.Println("qps", qps)
+				atomic.SwapUint64(&qps, 0)
+				time.Sleep(time.Second)
+			}
+		}()
+	*/
 	return ReqTraceWithConfig(defaultReqTraceConfig)
 }
 
@@ -38,11 +46,9 @@ func ReqTraceWithConfig(cfg ReqTraceConfig) echo.MiddlewareFunc {
 			}
 			httpTracer := tracer.HTTPTracer{}
 			httpTracer.Begin(c)
-			//beg := time.Now()
 
 			defer func() {
 				httpTracer.End(c)
-				//atomic.AddInt64(&use, time.Now().Sub(beg).Milliseconds())
 				//atomic.AddUint64(&qps, 1)
 			}()
 

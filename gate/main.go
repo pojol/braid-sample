@@ -1,7 +1,7 @@
 package main
 
 import (
-	"braid-game/gate/middleware"
+	bm "braid-game/gate/middleware"
 	"braid-game/gate/routes"
 	"context"
 	"flag"
@@ -11,6 +11,8 @@ import (
 	"runtime/debug"
 	"syscall"
 	"time"
+
+	_ "net/http/pprof"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/braid"
@@ -89,21 +91,8 @@ func main() {
 		log.Fatalf("redis init", err)
 	}
 
-	/*
-		elec, err := election.GetBuilder(k8selector.ElectionName).Build(k8selector.Cfg{
-			KubeCfg:     *kubeconfig,
-			NodID:       *nodeID,
-			Namespace:   "default",
-			RetryPeriod: time.Second * 2,
-		})
-		if err != nil {
-			log.Fatalf("elector build err", err)
-		}
-
-		elec.Run()
-	*/
-
 	b := braid.New(NodeName)
+
 	b.RegistPlugin(braid.DiscoverByConsul(consulAddr),
 		braid.BalancerBySwrr(),
 		braid.GRPCClient(),
@@ -116,15 +105,19 @@ func main() {
 	defer b.Close()
 
 	e := echo.New()
-	e.Use(middleware.ReqTrace())
-	e.Use(middleware.ReqLimit())
+	e.Use(bm.ReqTrace())
+	e.Use(bm.ReqLimit())
 	e.POST("/*", routes.PostRouting)
 
 	//go gatemid.Tick()
 	braid.Pubsub().Pub(linkerredis.LinkerTopicUnlink, &pubsub.Message{
 		Body: []byte("1"),
 	})
-
+	/*
+		go func() {
+			fmt.Println(http.ListenAndServe(":6060", nil))
+		}()
+	*/
 	err = e.Start(":14222")
 	if err != nil {
 		log.Fatalf("start echo err", err)
