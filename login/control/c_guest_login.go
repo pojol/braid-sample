@@ -63,7 +63,7 @@ func GuestLogin(ctx context.Context, token string, reqBody []byte) (interface{},
 	var err error
 	token = "token" + GetUniqueID()
 
-	time.AfterFunc(time.Minute, func() {
+	time.AfterFunc(time.Minute*3, func() {
 		braid.Pubsub().Pub(linkerredis.LinkerTopicUnlink, &pubsub.Message{
 			Body: []byte(token),
 		})

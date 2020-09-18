@@ -53,7 +53,8 @@ func main() {
 	defer l.Close()
 
 	b := braid.New(NodeName)
-	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222")),
+	b.RegistPlugin(
+		braid.GRPCServer(grpcserver.WithListen(":14222")),
 		braid.ElectorByConsul(consulAddr),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 

@@ -18,8 +18,9 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
-	"github.com/pojol/braid/module/pubsub"
 	"github.com/pojol/braid/module/tracer"
+	"github.com/pojol/braid/plugin/balancerswrr"
+	"github.com/pojol/braid/plugin/discoverconsul"
 	"github.com/pojol/braid/plugin/linkerredis"
 )
 
@@ -93,11 +94,14 @@ func main() {
 
 	b := braid.New(NodeName)
 
-	b.RegistPlugin(braid.DiscoverByConsul(consulAddr),
-		braid.BalancerBySwrr(),
+	b.RegistPlugin(
+		braid.Discover(
+			discoverconsul.Name,
+			discoverconsul.WithConsulAddress(consulAddr)),
+		braid.Balancer(balancerswrr.Name),
 		braid.GRPCClient(),
 		braid.ElectorByConsul(consulAddr),
-		braid.LinkerByRedis(),
+		braid.LinkCache(linkerredis.Name),
 		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
@@ -110,9 +114,6 @@ func main() {
 	e.POST("/*", routes.PostRouting)
 
 	//go gatemid.Tick()
-	braid.Pubsub().Pub(linkerredis.LinkerTopicUnlink, &pubsub.Message{
-		Body: []byte("1"),
-	})
 	/*
 		go func() {
 			fmt.Println(http.ListenAndServe(":6060", nil))

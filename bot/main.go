@@ -118,4 +118,9 @@ func main() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	<-ch
+
+	for _, v := range bots {
+		v.Close()
+	}
+	time.Sleep(time.Second)
 }

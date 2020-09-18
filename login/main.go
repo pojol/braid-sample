@@ -12,9 +12,11 @@ import (
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/tracer"
+	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
 	"github.com/pojol/braid/plugin/grpcserver"
+	"github.com/pojol/braid/plugin/linkerredis"
 	"google.golang.org/grpc"
 )
 
@@ -76,13 +78,17 @@ func main() {
 	}
 
 	b := braid.New(NodeName)
-	b.RegistPlugin(braid.GRPCServer(grpcserver.WithListen(":14222")),
-		braid.DiscoverByConsul(consulAddr, discoverconsul.WithBlacklist([]string{"gateway"})),
-		braid.BalancerBySwrr(),
+	b.RegistPlugin(
+		braid.GRPCServer(grpcserver.WithListen(":14222")),
+		braid.Discover(
+			discoverconsul.Name,
+			discoverconsul.WithConsulAddress(consulAddr),
+			discoverconsul.WithBlacklist([]string{"gateway"})),
+		braid.Balancer(balancerswrr.Name),
 		braid.GRPCClient(),
 		braid.ElectorByConsul(consulAddr),
 		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}),
-		braid.LinkerByRedis(),
+		braid.LinkCache(linkerredis.Name),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
