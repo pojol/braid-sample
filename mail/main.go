@@ -11,6 +11,7 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/module/tracer"
+	"github.com/pojol/braid/plugin/electorconsul"
 	"github.com/pojol/braid/plugin/grpcserver"
 	"google.golang.org/grpc"
 )
@@ -55,7 +56,10 @@ func main() {
 	b := braid.New(NodeName)
 	b.RegistPlugin(
 		braid.GRPCServer(grpcserver.WithListen(":14222")),
-		braid.ElectorByConsul(consulAddr),
+		braid.Elector(
+			electorconsul.Name,
+			electorconsul.WithConsulAddr(consulAddr),
+		),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	api.RegisterMailServer(braid.Server().Server().(*grpc.Server), &handle.MailServer{})

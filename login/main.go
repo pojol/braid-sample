@@ -14,9 +14,11 @@ import (
 	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
+	"github.com/pojol/braid/plugin/electorconsul"
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
 	"github.com/pojol/braid/plugin/grpcserver"
 	"github.com/pojol/braid/plugin/linkerredis"
+	"github.com/pojol/braid/plugin/pubsubnsq"
 	"google.golang.org/grpc"
 )
 
@@ -82,12 +84,18 @@ func main() {
 		braid.GRPCServer(grpcserver.WithListen(":14222")),
 		braid.Discover(
 			discoverconsul.Name,
-			discoverconsul.WithConsulAddress(consulAddr),
+			discoverconsul.WithConsulAddr(consulAddr),
 			discoverconsul.WithBlacklist([]string{"gateway"})),
 		braid.Balancer(balancerswrr.Name),
 		braid.GRPCClient(),
-		braid.ElectorByConsul(consulAddr),
-		braid.PubsubByNsq([]string{nsqLookupAddr}, []string{nsqdAddr}),
+		braid.Elector(
+			electorconsul.Name,
+			electorconsul.WithConsulAddr(consulAddr),
+		),
+		braid.Pubsub(
+			pubsubnsq.Name,
+			pubsubnsq.WithLookupAddr([]string{nsqLookupAddr}),
+			pubsubnsq.WithNsqdAddr([]string{nsqdAddr})),
 		braid.LinkCache(linkerredis.Name),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 

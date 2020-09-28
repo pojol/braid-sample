@@ -76,6 +76,7 @@ func main() {
 		}, md)
 
 		bot.Timeline.AddStep(bbsteps.NewGuestLoginStep(md))
+		bot.Timeline.AddStep(bbsteps.NewLoginOutStep(md))
 		bot.Timeline.AddLoopStep(bbsteps.NewRenameStep(md))
 
 		bot.Run()
