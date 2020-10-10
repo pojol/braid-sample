@@ -1,6 +1,4 @@
-
-FROM golang:alpine
-
+FROM alpine
 
 COPY ./base_linux /tmp/app/
 

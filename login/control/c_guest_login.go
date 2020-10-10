@@ -3,13 +3,14 @@ package control
 import (
 	"braid-game/proto"
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/redis"
-	"github.com/pojol/braid/module/pubsub"
+	"github.com/pojol/braid/module/mailbox"
 	"github.com/pojol/braid/plugin/linkerredis"
 )
 
@@ -63,13 +64,15 @@ func GuestLogin(ctx context.Context, token string, reqBody []byte) (interface{},
 	var err error
 	token = "token" + GetUniqueID()
 
-	time.AfterFunc(time.Minute*3, func() {
-		braid.GetPubsub().Pub(linkerredis.LinkerTopicUnlink, &pubsub.Message{
+	time.AfterFunc(time.Minute, func() {
+		fmt.Println("cluster pub", linkerredis.LinkerTopicUnlink, token)
+		braid.Mailbox().ClusterPub(linkerredis.LinkerTopicUnlink, &mailbox.Message{
 			Body: []byte(token),
 		})
 	})
 
 	res.Token = token
+	fmt.Println("login token", res.Token)
 	return res, err
 }
 

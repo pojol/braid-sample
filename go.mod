@@ -3,6 +3,7 @@ module braid-game
 go 1.13
 
 require (
+	cloud.google.com/go v0.38.0
 	github.com/garyburd/redigo v1.6.2
 	github.com/golang/protobuf v1.3.3
 	github.com/gomodule/redigo v2.0.0+incompatible

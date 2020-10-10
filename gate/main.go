@@ -22,8 +22,9 @@ import (
 	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
 	"github.com/pojol/braid/plugin/electorconsul"
+	"github.com/pojol/braid/plugin/grpcclient"
 	"github.com/pojol/braid/plugin/linkerredis"
-	"github.com/pojol/braid/plugin/pubsubnsq"
+	"github.com/pojol/braid/plugin/mailboxnsq"
 )
 
 var (
@@ -94,23 +95,22 @@ func main() {
 		log.Fatalf("redis init", err)
 	}
 
-	b := braid.New(NodeName)
+	b := braid.New(
+		NodeName,
+		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
+		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))
 
 	b.RegistPlugin(
 		braid.Discover(
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr)),
 		braid.Balancer(balancerswrr.Name),
-		braid.GRPCClient(),
+		braid.GRPCClient(grpcclient.Name),
 		braid.Elector(
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
 		braid.LinkCache(linkerredis.Name),
-		braid.Pubsub(
-			pubsubnsq.Name,
-			pubsubnsq.WithLookupAddr([]string{nsqLookupAddr}),
-			pubsubnsq.WithNsqdAddr([]string{nsqdAddr})),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	b.Run()

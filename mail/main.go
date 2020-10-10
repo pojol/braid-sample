@@ -54,8 +54,12 @@ func main() {
 	defer l.Close()
 
 	b := braid.New(NodeName)
+
 	b.RegistPlugin(
-		braid.GRPCServer(grpcserver.WithListen(":14222")),
+		braid.GRPCServer(
+			grpcserver.Name,
+			grpcserver.WithListen(":14222"),
+		),
 		braid.Elector(
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),

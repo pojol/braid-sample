@@ -15,10 +15,11 @@ import (
 	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
 	"github.com/pojol/braid/plugin/electorconsul"
+	"github.com/pojol/braid/plugin/grpcclient"
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
 	"github.com/pojol/braid/plugin/grpcserver"
 	"github.com/pojol/braid/plugin/linkerredis"
-	"github.com/pojol/braid/plugin/pubsubnsq"
+	"github.com/pojol/braid/plugin/mailboxnsq"
 	"google.golang.org/grpc"
 )
 
@@ -79,23 +80,26 @@ func main() {
 		log.Fatalf("redis init", err)
 	}
 
-	b := braid.New(NodeName)
+	b := braid.New(
+		NodeName,
+		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
+		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))
+
 	b.RegistPlugin(
-		braid.GRPCServer(grpcserver.WithListen(":14222")),
+		braid.GRPCServer(
+			grpcserver.Name,
+			grpcserver.WithListen(":14222"),
+		),
 		braid.Discover(
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr),
 			discoverconsul.WithBlacklist([]string{"gateway"})),
 		braid.Balancer(balancerswrr.Name),
-		braid.GRPCClient(),
+		braid.GRPCClient(grpcclient.Name),
 		braid.Elector(
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
-		braid.Pubsub(
-			pubsubnsq.Name,
-			pubsubnsq.WithLookupAddr([]string{nsqLookupAddr}),
-			pubsubnsq.WithNsqdAddr([]string{nsqdAddr})),
 		braid.LinkCache(linkerredis.Name),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 

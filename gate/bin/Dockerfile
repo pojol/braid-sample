@@ -1,5 +1,4 @@
-
-FROM golang:alpine
+FROM alpine
 
 COPY ./gateway_linux /tmp/app/
 

@@ -1,5 +1,4 @@
-
-FROM golang:alpine
+FROM alpine
 
 COPY ./mail_linux /tmp/app/
 
