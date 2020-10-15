@@ -3,13 +3,13 @@ package main
 import (
 	"braid-game/login/handle"
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/balancerswrr"
@@ -55,17 +55,6 @@ func main() {
 		return
 	}
 
-	l := log.New(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/login",
-		Suffex: ".log",
-	}, log.WithSys(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/login",
-		Suffex: ".sys",
-	}))
-	defer l.Close()
-
 	rc := redis.New()
 	err := rc.Init(redis.Config{
 		Address:        redisAddr,
@@ -80,7 +69,7 @@ func main() {
 		log.Fatalf("redis init", err)
 	}
 
-	b := braid.New(
+	b, _ := braid.New(
 		NodeName,
 		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
 		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))

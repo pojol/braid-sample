@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/electorconsul"
 	"github.com/pojol/braid/plugin/grpcserver"
@@ -42,18 +41,7 @@ func main() {
 		return
 	}
 
-	l := log.New(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/mail",
-		Suffex: ".log",
-	}, log.WithSys(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/mail",
-		Suffex: ".sys",
-	}))
-	defer l.Close()
-
-	b := braid.New(NodeName)
+	b, _ := braid.New(NodeName)
 
 	b.RegistPlugin(
 		braid.GRPCServer(
