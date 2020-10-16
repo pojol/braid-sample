@@ -3,13 +3,13 @@ package main
 import (
 	"braid-game/login/handle"
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/balancerswrr"
@@ -55,17 +55,6 @@ func main() {
 		return
 	}
 
-	l := log.New(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/login",
-		Suffex: ".log",
-	}, log.WithSys(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/login",
-		Suffex: ".sys",
-	}))
-	defer l.Close()
-
 	rc := redis.New()
 	err := rc.Init(redis.Config{
 		Address:        redisAddr,
@@ -80,7 +69,7 @@ func main() {
 		log.Fatalf("redis init", err)
 	}
 
-	b := braid.New(
+	b, _ := braid.New(
 		NodeName,
 		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
 		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))
@@ -100,13 +89,14 @@ func main() {
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
-		braid.LinkCache(linkerredis.Name),
+		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
 
 	b.Run()
 	defer b.Close()
+	defer rc.Close()
 
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)

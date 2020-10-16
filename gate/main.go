@@ -6,18 +6,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"runtime/debug"
 	"syscall"
-	"time"
 
 	_ "net/http/pprof"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/3rd/log"
-	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
@@ -71,31 +69,7 @@ func main() {
 		return
 	}
 
-	log.New(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/gateway",
-		Suffex: ".log",
-	}, log.WithSys(log.Config{
-		Mode:   log.DebugMode,
-		Path:   "/var/log/gateway",
-		Suffex: ".sys",
-	}))
-
-	rc := redis.New()
-	err := rc.Init(redis.Config{
-		Address:        redisAddr,
-		ReadTimeOut:    5 * time.Second,
-		WriteTimeOut:   5 * time.Second,
-		ConnectTimeOut: 2 * time.Second,
-		MaxIdle:        16,
-		MaxActive:      128,
-		IdleTimeout:    0,
-	})
-	if err != nil {
-		log.Fatalf("redis init", err)
-	}
-
-	b := braid.New(
+	b, _ := braid.New(
 		NodeName,
 		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
 		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))
@@ -110,7 +84,7 @@ func main() {
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
-		braid.LinkCache(linkerredis.Name),
+		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	b.Run()
@@ -127,7 +101,7 @@ func main() {
 			fmt.Println(http.ListenAndServe(":6060", nil))
 		}()
 	*/
-	err = e.Start(":14222")
+	err := e.Start(":14222")
 	if err != nil {
 		log.Fatalf("start echo err", err)
 	}
@@ -136,7 +110,6 @@ func main() {
 	signal.Notify(ch, syscall.SIGTERM)
 	<-ch
 
-	rc.Close()
 	if err := e.Shutdown(context.TODO()); err != nil {
 		panic(err)
 	}

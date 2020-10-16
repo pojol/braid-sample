@@ -39,13 +39,13 @@ func GetUniqueID() string {
 	field := "uniqueid_field" + strconv.Itoa(totalDay)
 	err := uniqueIncrScript.Send(conn, field)
 	if err != nil {
-		//plog.BSystemError("redis", "GetUniqueID", "send", err.Error())
+		fmt.Println("GetUniqueID uniqueIncrScript.Send err", err.Error())
 		goto TAG
 	}
 
 	val, err = redis.ConnGet(conn, field)
 	if err != nil || val == "" {
-		//plog.BSystemError("redis", "GetUniqueID", "ConnGet", err.Error())
+		fmt.Println("GetUniqueID redis.ConnGet err", err.Error())
 		goto TAG
 	}
 
@@ -78,6 +78,8 @@ func GuestLogin(ctx context.Context, token string, reqBody []byte) (interface{},
 
 // Loginout 登出
 func Loginout(ctx context.Context, token string, reqBody []byte) (interface{}, error) {
+
+	fmt.Println("loginout token", token)
 
 	return []byte{}, nil
 }
