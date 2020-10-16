@@ -89,13 +89,14 @@ func main() {
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
-		braid.LinkCache(linkerredis.Name),
+		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
 
 	b.Run()
 	defer b.Close()
+	defer rc.Close()
 
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)

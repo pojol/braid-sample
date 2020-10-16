@@ -3,14 +3,11 @@ package main
 import (
 	"braid-game/base/handle"
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
@@ -56,20 +53,6 @@ func main() {
 		return
 	}
 
-	rc := redis.New()
-	err := rc.Init(redis.Config{
-		Address:        redisAddr,
-		ReadTimeOut:    5 * time.Second,
-		WriteTimeOut:   5 * time.Second,
-		ConnectTimeOut: 2 * time.Second,
-		MaxIdle:        16,
-		MaxActive:      128,
-		IdleTimeout:    0,
-	})
-	if err != nil {
-		log.Fatalf("redis init", err)
-	}
-
 	b, _ := braid.New(
 		NodeName,
 		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
@@ -89,7 +72,7 @@ func main() {
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
-		braid.LinkCache(linkerredis.Name),
+		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
 	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})

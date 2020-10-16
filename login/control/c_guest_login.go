@@ -39,11 +39,13 @@ func GetUniqueID() string {
 	field := "uniqueid_field" + strconv.Itoa(totalDay)
 	err := uniqueIncrScript.Send(conn, field)
 	if err != nil {
+		fmt.Println("GetUniqueID uniqueIncrScript.Send err", err.Error())
 		goto TAG
 	}
 
 	val, err = redis.ConnGet(conn, field)
 	if err != nil || val == "" {
+		fmt.Println("GetUniqueID redis.ConnGet err", err.Error())
 		goto TAG
 	}
 
