@@ -103,7 +103,7 @@ func main() {
 	*/
 	err := e.Start(":14222")
 	if err != nil {
-		log.Fatalf("start echo err", err)
+		log.Fatalf("start echo err %s", err.Error())
 	}
 
 	ch := make(chan os.Signal)
