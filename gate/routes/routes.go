@@ -10,6 +10,7 @@ import (
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 func routing(ctx echo.Context, nodName string, serviceName string, token string) error {
@@ -31,7 +32,7 @@ func routing(ctx echo.Context, nodName string, serviceName string, token string)
 
 EXT:
 	if err != nil {
-		fmt.Println("routes", "routing", err.Error())
+		log.Debugf("routing err %s", err.Error())
 		ctx.Response().Header().Set("Errcode", "-1")
 		ctx.Response().Header().Set("Errmsg", err.Error())
 	} else {

@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -134,7 +135,8 @@ func createBot(port string) *gobot.Bot {
 
 	bot.Timeline.AddStep(bbsteps.NewGuestLoginStep(md))
 	bot.Timeline.AddStep(bbsteps.NewLoginOutStep(md))
-	bot.Timeline.AddLoopStep(bbsteps.NewRenameStep(md))
+	renameid := bot.Timeline.AddLoopStep(bbsteps.NewRenameStep(md))
+	bot.Timeline.SetStepDura(renameid, time.Second)
 
 	return bot
 }
@@ -142,9 +144,11 @@ func createBot(port string) *gobot.Bot {
 func increaseBot(ports []string, ch chan os.Signal) {
 
 	botm := make(map[string]*gobot.Bot)
-	ticker := time.NewTicker(time.Second)
+	var mutex sync.Mutex
 
 	go func() {
+		ticker := time.NewTicker(time.Second)
+
 		for {
 			select {
 			case <-ticker.C:
@@ -153,14 +157,17 @@ func increaseBot(ports []string, ch chan os.Signal) {
 					bot := createBot(ports[rand.Intn(len(ports))])
 					bot.Run()
 					time.AfterFunc(time.Duration(lifetime)*time.Second, func() {
-						bot.Close()
+						mutex.Lock()
+						defer mutex.Unlock()
 
 						reportByMap(botm)
-
+						bot.Close()
 						delete(botm, bot.ID())
 					})
 
+					mutex.Lock()
 					botm[bot.ID()] = bot
+					mutex.Unlock()
 				}
 			default:
 			}

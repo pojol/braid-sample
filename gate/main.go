@@ -5,17 +5,15 @@ import (
 	"braid-game/gate/routes"
 	"context"
 	"flag"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
 
 	_ "net/http/pprof"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/braid"
+	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
@@ -51,13 +49,6 @@ func initFlag() {
 }
 
 func main() {
-	defer func() {
-		if err := recover(); err != nil {
-			stack := string(debug.Stack())
-			fmt.Printf("stack: %v\n", stack)
-			fmt.Println(fmt.Errorf("error: %v", err).Error())
-		}
-	}()
 
 	initFlag()
 	//var kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
