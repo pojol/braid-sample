@@ -84,7 +84,7 @@ func main() {
 	e := echo.New()
 	e.Use(bm.ReqTrace())
 	e.Use(bm.ReqLimit())
-	e.POST("/*", routes.PostRouting)
+	routes.Regist(e)
 
 	//go gatemid.Tick()
 	/*
