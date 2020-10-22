@@ -1,10 +1,8 @@
 package routes
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/plugin/grpcclient/bproto"
@@ -31,7 +29,6 @@ func routing(ctx echo.Context, nodName string, serviceName string, token string)
 
 EXT:
 	if err != nil {
-		fmt.Println("routes", "routing", err.Error())
 		ctx.Response().Header().Set("Errcode", "-1")
 		ctx.Response().Header().Set("Errmsg", err.Error())
 	} else {
@@ -42,52 +39,24 @@ EXT:
 	return err
 }
 
-func parsingURL(url string) (string, string, string, error) {
-
-	var ver string
-	var box string
-	var service string
-	var err error
-	var urls []string
-
-	if url == "" {
-		err = echo.ErrNotFound
-		goto TAG
-	}
-
-	if url[0] == '/' {
-		url = url[1:]
-	}
-
-	urls = strings.Split(url, "/")
-	if len(urls) != 3 {
-		err = echo.ErrNotFound
-		goto TAG
-	}
-
-	err = nil
-	ver = urls[0]
-	box = urls[1]
-	service = urls[2]
-
-TAG:
-	if err != nil {
-		fmt.Println("routes", "parsingUrl", err.Error())
-	}
-
-	return ver, box, service, err
+// Regist regist
+func Regist(e *echo.Echo) {
+	e.POST("/v1/login/guest", guestHandler)
+	e.POST("/v1/login/out", outHandler)
+	e.POST("/v1/base/rename", renameHandler)
 }
 
-// PostRouting 路由
-func PostRouting(ctx echo.Context) error {
-
+func guestHandler(ctx echo.Context) error {
 	token := ctx.Request().Header.Get("token")
-	_, boxName, serviceName, err := parsingURL(ctx.Request().RequestURI)
-	if err != nil {
-		return err
-	}
+	return routing(ctx, "login", "guest", token)
+}
 
-	err = routing(ctx, boxName, serviceName, token)
+func outHandler(ctx echo.Context) error {
+	token := ctx.Request().Header.Get("token")
+	return routing(ctx, "login", "out", token)
+}
 
-	return err
+func renameHandler(ctx echo.Context) error {
+	token := ctx.Request().Header.Get("token")
+	return routing(ctx, "base", "rename", token)
 }
