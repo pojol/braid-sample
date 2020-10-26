@@ -75,7 +75,7 @@ func main() {
 		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
-	bproto.RegisterListenServer(braid.Server().Server().(*grpc.Server), &handle.RouteServer{})
+	bproto.RegisterListenServer(braid.Server().(*grpc.Server), &handle.RouteServer{})
 
 	b.Run()
 	defer b.Close()

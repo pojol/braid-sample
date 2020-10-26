@@ -54,7 +54,7 @@ func main() {
 		),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
-	api.RegisterMailServer(braid.Server().Server().(*grpc.Server), &handle.MailServer{})
+	api.RegisterMailServer(braid.Server().(*grpc.Server), &handle.MailServer{})
 
 	b.Run()
 	defer b.Close()
