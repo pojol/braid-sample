@@ -20,7 +20,7 @@ func routing(ctx echo.Context, nodName string, serviceName string, token string)
 		goto EXT
 	}
 
-	braid.Client().Invoke(ctx.Request().Context(), nodName, "/bproto.listen/routing", token, &bproto.RouteReq{
+	braid.Invoke(ctx.Request().Context(), nodName, "/bproto.listen/routing", token, &bproto.RouteReq{
 		Nod:     nodName,
 		Service: serviceName,
 		Token:   token,

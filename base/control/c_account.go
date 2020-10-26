@@ -25,7 +25,7 @@ func Rename(ctx context.Context, token string, reqBody []byte) (interface{}, err
 
 	res.Nickname = req.Nickname
 
-	braid.Client().Invoke(ctx, "mail", "/api.mail/send", token, &api.SendMailReq{
+	braid.Invoke(ctx, "mail", "/api.mail/send", token, &api.SendMailReq{
 		Accountid: "testaccountid",
 		Body: &api.MailBody{
 			Title: "hello,braid.",
