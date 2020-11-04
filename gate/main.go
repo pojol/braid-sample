@@ -5,17 +5,18 @@ import (
 	"braid-game/gate/routes"
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"net/http"
 	_ "net/http/pprof"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
 	"github.com/pojol/braid/plugin/electorconsul"
 	"github.com/pojol/braid/plugin/grpcclient"
@@ -69,7 +70,6 @@ func main() {
 		braid.Discover(
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr)),
-		braid.Balancer(balancerswrr.Name),
 		braid.GRPCClient(grpcclient.Name),
 		braid.Elector(
 			electorconsul.Name,
@@ -78,6 +78,7 @@ func main() {
 		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
 		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
 
+	b.Init()
 	b.Run()
 	defer b.Close()
 
@@ -87,11 +88,11 @@ func main() {
 	routes.Regist(e)
 
 	//go gatemid.Tick()
-	/*
-		go func() {
-			fmt.Println(http.ListenAndServe(":6060", nil))
-		}()
-	*/
+
+	go func() {
+		fmt.Println(http.ListenAndServe(":6060", nil))
+	}()
+
 	err := e.Start(":14222")
 	if err != nil {
 		log.Fatalf("start echo err %s", err.Error())
