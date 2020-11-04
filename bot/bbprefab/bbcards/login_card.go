@@ -63,7 +63,7 @@ func (card *GuestLoginCard) Unmarshal(res *http.Response) {
 	b, _ := ioutil.ReadAll(res.Body)
 	err := json.Unmarshal(b, &cres)
 	if err != nil {
-		fmt.Println(card.GetURL(), "json.Unmarshal", errcode)
+		fmt.Println(card.GetURL(), "json.Unmarshal", errcode, "token", cres.Token)
 	}
 
 	card.md.AccToken = cres.Token

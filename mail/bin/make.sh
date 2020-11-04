@@ -10,4 +10,4 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o mail_linux /Users/pojol/work/g
 
 
 # build
-docker build -t braid-game/mail .
+docker build -t braid-game/mail . --no-cache

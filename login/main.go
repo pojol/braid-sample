@@ -12,7 +12,6 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/balancerswrr"
 	"github.com/pojol/braid/plugin/discoverconsul"
 	"github.com/pojol/braid/plugin/electorconsul"
 	"github.com/pojol/braid/plugin/grpcclient"
@@ -83,7 +82,6 @@ func main() {
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr),
 			discoverconsul.WithBlacklist([]string{"gateway"})),
-		braid.Balancer(balancerswrr.Name),
 		braid.GRPCClient(grpcclient.Name),
 		braid.Elector(
 			electorconsul.Name,
@@ -94,8 +92,10 @@ func main() {
 
 	bproto.RegisterListenServer(braid.Server().(*grpc.Server), &handle.RouteServer{})
 
+	b.Init()
 	b.Run()
 	defer b.Close()
+
 	defer rc.Close()
 
 	ch := make(chan os.Signal)

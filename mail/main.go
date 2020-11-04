@@ -56,6 +56,7 @@ func main() {
 
 	api.RegisterMailServer(braid.Server().(*grpc.Server), &handle.MailServer{})
 
+	b.Init()
 	b.Run()
 	defer b.Close()
 

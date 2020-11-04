@@ -8,6 +8,7 @@ import (
 	"time"
 
 	redigo "github.com/gomodule/redigo/redis"
+	"github.com/google/uuid"
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/mailbox"
@@ -62,7 +63,8 @@ func GuestLogin(ctx context.Context, token string, reqBody []byte) (interface{},
 	res := proto.GuestLoginRes{}
 
 	var err error
-	token = "token" + GetUniqueID()
+	//token = "token" + GetUniqueID()
+	token = uuid.New().String()
 
 	time.AfterFunc(time.Minute, func() {
 		fmt.Println("cluster pub", linkerredis.LinkerTopicUnlink, token)
