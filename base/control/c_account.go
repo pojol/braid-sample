@@ -32,7 +32,7 @@ func Rename(ctx context.Context, token string, reqBody []byte) (interface{}, err
 		},
 	}, mailRes)
 	if mailRes.Errcode != int32(errcode.Succ) {
-		fmt.Println("send mail err", mailRes.Errcode)
+		fmt.Println("send mail err", mailRes.Errcode, token)
 	}
 
 	return res, err

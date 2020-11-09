@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/pojol/braid/plugin/grpcclient/bproto"
+	"github.com/pojol/braid/modules/grpcclient/bproto"
 )
 
 // RouteServer 路由服务器

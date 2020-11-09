@@ -1,6 +1,7 @@
 package main
 
 import (
+	"braid-game/common"
 	bm "braid-game/gate/middleware"
 	"braid-game/gate/routes"
 	"context"
@@ -8,7 +9,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -17,11 +20,11 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/discoverconsul"
-	"github.com/pojol/braid/plugin/electorconsul"
-	"github.com/pojol/braid/plugin/grpcclient"
-	"github.com/pojol/braid/plugin/linkerredis"
-	"github.com/pojol/braid/plugin/mailboxnsq"
+	"github.com/pojol/braid/modules/discoverconsul"
+	"github.com/pojol/braid/modules/electorconsul"
+	"github.com/pojol/braid/modules/grpcclient"
+	"github.com/pojol/braid/modules/linkerredis"
+	"github.com/pojol/braid/modules/mailboxnsq"
 )
 
 var (
@@ -32,6 +35,7 @@ var (
 	jaegerAddr    string
 	nsqLookupAddr string
 	nsqdAddr      string
+	localPort     int
 )
 
 const (
@@ -42,16 +46,18 @@ const (
 func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
-	flag.StringVar(&consulAddr, "consul", "http://127.0.0.1:8900", "set consul address")
+	flag.StringVar(&consulAddr, "consul", "http://127.0.0.1:8500", "set consul address")
 	flag.StringVar(&redisAddr, "redis", "redis://127.0.0.1:6379/0", "set redis address")
 	flag.StringVar(&jaegerAddr, "jaeger", "http://127.0.0.1:9411/api/v2/spans", "set jaeger address")
 	flag.StringVar(&nsqLookupAddr, "nsqlookup", "127.0.0.1:4161", "set nsq lookup address")
 	flag.StringVar(&nsqdAddr, "nsqd", "127.0.0.1:4150", "set nsqd address")
+	flag.IntVar(&localPort, "localPort", 0, "run locally")
 }
 
 func main() {
 
 	initFlag()
+	var err error
 	//var kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	//var nodeID = flag.String("node-id", "", "node id used for leader election")
 
@@ -61,12 +67,30 @@ func main() {
 		return
 	}
 
+	if localPort != 0 {
+		addr := ":" + strconv.Itoa(localPort)
+
+		id := strconv.Itoa(int(time.Now().UnixNano())) + addr
+		err := common.Regist(common.ConsulRegistReq{
+			Name:    NodeName,
+			ID:      id,
+			Tags:    []string{"braid", NodeName},
+			Address: "127.0.0.1",
+			Port:    localPort,
+		}, consulAddr)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		defer common.Deregist(id, consulAddr)
+	}
+
 	b, _ := braid.New(
 		NodeName,
 		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
 		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))
 
-	b.RegistPlugin(
+	b.RegistModule(
 		braid.Discover(
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr)),
@@ -93,7 +117,11 @@ func main() {
 		fmt.Println(http.ListenAndServe(":6060", nil))
 	}()
 
-	err := e.Start(":14222")
+	if localPort == 0 {
+		err = e.Start(":14222")
+	} else {
+		err = e.Start(":" + strconv.Itoa(localPort))
+	}
 	if err != nil {
 		log.Fatalf("start echo err %s", err.Error())
 	}

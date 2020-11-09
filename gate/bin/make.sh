@@ -2,7 +2,7 @@
 
 rm gateway
 echo "build gateway ..."
-go build -o gateway /Users/pojol/work/gohome/src/braid-game/gate/main.go
+go build -race -o gateway /Users/pojol/work/gohome/src/braid-game/gate/main.go
 
 rm gateway_linux
 echo "build gateway_linux ..."

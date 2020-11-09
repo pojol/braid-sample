@@ -2,20 +2,23 @@ package main
 
 import (
 	"braid-game/base/handle"
+	"braid-game/common"
 	"flag"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/plugin/discoverconsul"
-	"github.com/pojol/braid/plugin/electorconsul"
-	"github.com/pojol/braid/plugin/grpcclient"
-	"github.com/pojol/braid/plugin/grpcclient/bproto"
-	"github.com/pojol/braid/plugin/grpcserver"
-	"github.com/pojol/braid/plugin/linkerredis"
-	"github.com/pojol/braid/plugin/mailboxnsq"
+	"github.com/pojol/braid/modules/discoverconsul"
+	"github.com/pojol/braid/modules/electorconsul"
+	"github.com/pojol/braid/modules/grpcclient"
+	"github.com/pojol/braid/modules/grpcclient/bproto"
+	"github.com/pojol/braid/modules/grpcserver"
+	"github.com/pojol/braid/modules/linkerredis"
+	"github.com/pojol/braid/modules/mailboxnsq"
 	"google.golang.org/grpc"
 )
 
@@ -27,6 +30,7 @@ var (
 	nsqLookupAddr string
 	nsqdAddr      string
 	redisAddr     string
+	localPort     int
 
 	// NodeName 节点名
 	NodeName = "base"
@@ -35,11 +39,12 @@ var (
 func initFlag() {
 	flag.BoolVar(&help, "h", false, "this help")
 
-	flag.StringVar(&consulAddr, "consul", "http://127.0.0.1:8900", "set consul address")
+	flag.StringVar(&consulAddr, "consul", "http://127.0.0.1:8500", "set consul address")
 	flag.StringVar(&jaegerAddr, "jaeger", "http://127.0.0.1:9411/api/v2/spans", "set jaeger address")
 	flag.StringVar(&nsqLookupAddr, "nsqlookup", "127.0.0.1:4161", "set nsq lookup address")
 	flag.StringVar(&nsqdAddr, "nsqd", "127.0.0.1:4150", "set nsqd address")
 	flag.StringVar(&redisAddr, "redis", "redis://127.0.0.1:6379/0", "set redis address")
+	flag.IntVar(&localPort, "localPort", 0, "run locally")
 
 }
 
@@ -57,15 +62,34 @@ func main() {
 		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
 		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))
 
-	b.RegistPlugin(
+	var rpcserver braid.Module
+	if localPort == 0 {
+		rpcserver = braid.GRPCServer(grpcserver.Name)
+	} else {
+		addr := ":" + strconv.Itoa(localPort)
+		rpcserver = braid.GRPCServer(grpcserver.Name, grpcserver.WithListen(addr))
+
+		id := strconv.Itoa(int(time.Now().UnixNano())) + addr
+		err := common.Regist(common.ConsulRegistReq{
+			Name:    NodeName,
+			ID:      id,
+			Tags:    []string{"braid", NodeName},
+			Address: "127.0.0.1",
+			Port:    localPort,
+		}, consulAddr)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		defer common.Deregist(id, consulAddr)
+	}
+
+	b.RegistModule(
 		braid.Discover(
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr)),
 		braid.GRPCClient(grpcclient.Name),
-		braid.GRPCServer(
-			grpcserver.Name,
-			grpcserver.WithListen(":14222"),
-		),
+		rpcserver,
 		braid.Elector(
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),

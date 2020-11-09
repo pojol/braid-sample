@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/plugin/grpcclient/bproto"
+	"github.com/pojol/braid/modules/grpcclient/bproto"
 
 	"github.com/labstack/echo/v4"
 )

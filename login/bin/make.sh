@@ -2,7 +2,7 @@
 
 rm login
 echo "build login ..."
-go build -o login /Users/pojol/work/gohome/src/braid-game/login/main.go
+go build -race -o login /Users/pojol/work/gohome/src/braid-game/login/main.go
 
 rm login_linux
 echo "build login_linux ..."

@@ -1,11 +1,11 @@
-FROM alpine
+FROM golang:alpine
 
 COPY ./base_linux /tmp/app/
 
 WORKDIR /tmp/app
 
 ENV SERVICE_TAGS=braid,base
-ENV SERVICE_14201_NAME=base
+#ENV SERVICE_14201_NAME=base
 ENV GOTRACEBACK=crash
 
 EXPOSE 14222

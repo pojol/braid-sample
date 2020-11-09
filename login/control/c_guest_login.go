@@ -12,7 +12,7 @@ import (
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/redis"
 	"github.com/pojol/braid/module/mailbox"
-	"github.com/pojol/braid/plugin/linkerredis"
+	"github.com/pojol/braid/modules/linkerredis"
 )
 
 // unixtime / 1000 + redis incr
@@ -68,7 +68,7 @@ func GuestLogin(ctx context.Context, token string, reqBody []byte) (interface{},
 
 	time.AfterFunc(time.Minute, func() {
 		fmt.Println("cluster pub", linkerredis.LinkerTopicUnlink, token)
-		braid.Mailbox().ClusterPub(linkerredis.LinkerTopicUnlink, &mailbox.Message{
+		braid.Mailbox().Pub(mailbox.Cluster, linkerredis.LinkerTopicUnlink, &mailbox.Message{
 			Body: []byte(token),
 		})
 	})
