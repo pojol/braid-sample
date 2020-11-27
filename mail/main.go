@@ -13,9 +13,8 @@ import (
 	"time"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/module/tracer"
-	"github.com/pojol/braid/modules/electorconsul"
 	"github.com/pojol/braid/modules/grpcserver"
+	"github.com/pojol/braid/modules/jaegertracing"
 	"google.golang.org/grpc"
 )
 
@@ -55,10 +54,10 @@ func main() {
 
 	var rpcserver braid.Module
 	if localPort == 0 {
-		rpcserver = braid.GRPCServer(grpcserver.Name)
+		rpcserver = braid.Server(grpcserver.Name)
 	} else {
 		addr := ":" + strconv.Itoa(localPort)
-		rpcserver = braid.GRPCServer(grpcserver.Name, grpcserver.WithListen(addr))
+		rpcserver = braid.Server(grpcserver.Name, grpcserver.WithListen(addr))
 
 		id := strconv.Itoa(int(time.Now().UnixNano())) + addr
 		err := common.Regist(common.ConsulRegistReq{
@@ -77,13 +76,12 @@ func main() {
 
 	b.RegistModule(
 		rpcserver,
-		braid.Elector(
-			electorconsul.Name,
-			electorconsul.WithConsulAddr(consulAddr),
-		),
-		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
+		braid.Tracing(jaegertracing.Name,
+			jaegertracing.WithHTTP(jaegerAddr),
+			jaegertracing.WithProbabilistic(0.1),
+		))
 
-	api.RegisterMailServer(braid.Server().(*grpc.Server), &handle.MailServer{})
+	api.RegisterMailServer(braid.GetServer().(*grpc.Server), &handle.MailServer{})
 
 	b.Init()
 	b.Run()

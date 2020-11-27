@@ -19,10 +19,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pojol/braid"
 	"github.com/pojol/braid/3rd/log"
-	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/modules/discoverconsul"
 	"github.com/pojol/braid/modules/electorconsul"
 	"github.com/pojol/braid/modules/grpcclient"
+	"github.com/pojol/braid/modules/jaegertracing"
 	"github.com/pojol/braid/modules/linkerredis"
 	"github.com/pojol/braid/modules/mailboxnsq"
 )
@@ -94,13 +94,16 @@ func main() {
 		braid.Discover(
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr)),
-		braid.GRPCClient(grpcclient.Name),
+		braid.Client(grpcclient.Name),
 		braid.Elector(
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
 		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
-		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
+		braid.Tracing(jaegertracing.Name,
+			jaegertracing.WithHTTP(jaegerAddr),
+			jaegertracing.WithProbabilistic(0.1),
+		))
 
 	b.Init()
 	b.Run()

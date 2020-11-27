@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/pojol/braid"
-	"github.com/pojol/braid/module/tracer"
 	"github.com/pojol/braid/modules/discoverconsul"
 	"github.com/pojol/braid/modules/electorconsul"
 	"github.com/pojol/braid/modules/grpcclient"
 	"github.com/pojol/braid/modules/grpcclient/bproto"
 	"github.com/pojol/braid/modules/grpcserver"
+	"github.com/pojol/braid/modules/jaegertracing"
 	"github.com/pojol/braid/modules/linkerredis"
 	"github.com/pojol/braid/modules/mailboxnsq"
 	"google.golang.org/grpc"
@@ -64,10 +64,10 @@ func main() {
 
 	var rpcserver braid.Module
 	if localPort == 0 {
-		rpcserver = braid.GRPCServer(grpcserver.Name)
+		rpcserver = braid.Server(grpcserver.Name)
 	} else {
 		addr := ":" + strconv.Itoa(localPort)
-		rpcserver = braid.GRPCServer(grpcserver.Name, grpcserver.WithListen(addr))
+		rpcserver = braid.Server(grpcserver.Name, grpcserver.WithListen(addr))
 
 		id := strconv.Itoa(int(time.Now().UnixNano())) + addr
 		err := common.Regist(common.ConsulRegistReq{
@@ -88,16 +88,19 @@ func main() {
 		braid.Discover(
 			discoverconsul.Name,
 			discoverconsul.WithConsulAddr(consulAddr)),
-		braid.GRPCClient(grpcclient.Name),
+		braid.Client(grpcclient.Name),
 		rpcserver,
 		braid.Elector(
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
 		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
-		braid.JaegerTracing(tracer.WithHTTP(jaegerAddr), tracer.WithProbabilistic(0.01)))
+		braid.Tracing(jaegertracing.Name,
+			jaegertracing.WithHTTP(jaegerAddr),
+			jaegertracing.WithProbabilistic(0.1),
+		))
 
-	bproto.RegisterListenServer(braid.Server().(*grpc.Server), &handle.RouteServer{})
+	bproto.RegisterListenServer(braid.GetServer().(*grpc.Server), &handle.RouteServer{})
 
 	b.Init()
 	b.Run()

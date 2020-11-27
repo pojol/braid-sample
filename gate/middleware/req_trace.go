@@ -3,7 +3,9 @@ package middleware
 import (
 	"github.com/labstack/echo/v4"
 	emid "github.com/labstack/echo/v4/middleware"
+	"github.com/pojol/braid"
 	"github.com/pojol/braid/module/tracer"
+	"github.com/pojol/braid/modules/jaegertracing"
 )
 
 type (
@@ -44,11 +46,20 @@ func ReqTraceWithConfig(cfg ReqTraceConfig) echo.MiddlewareFunc {
 			if cfg.Skipper(c) {
 				return next(c)
 			}
-			httpTracer := tracer.HTTPTracer{}
-			httpTracer.Begin(c)
+
+			tracing := braid.Tracer()
+			var span tracer.ISpan
+
+			if tracing != nil {
+				span, err = tracing.GetSpan(jaegertracing.EchoSpan)
+				if err != nil {
+					return next(c)
+				}
+			}
+			span.Begin(c)
 
 			defer func() {
-				httpTracer.End(c)
+				span.End(c)
 				//atomic.AddUint64(&qps, 1)
 			}()
 
