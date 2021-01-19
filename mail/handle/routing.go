@@ -1,9 +1,9 @@
 package handle
 
 import (
-	"braid-game/api"
 	"braid-game/mail/control"
 	"braid-game/mail/model"
+	"braid-game/proto/api"
 	"context"
 )
 

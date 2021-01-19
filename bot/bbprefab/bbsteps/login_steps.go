@@ -16,12 +16,3 @@ func NewGuestLoginStep(md *bbprefab.BotData) *prefab.Step {
 
 	return step
 }
-
-// NewLoginOutStep login out
-func NewLoginOutStep(md *bbprefab.BotData) *prefab.Step {
-	step := prefab.NewStep()
-
-	step.AddCard(bbcards.NewLoginOutCard(md))
-
-	return step
-}

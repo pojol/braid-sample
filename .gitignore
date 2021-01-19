@@ -12,3 +12,7 @@ base/bin/base_linux
 base/bin/run2.sh
 base/bin/run3.sh
 login_linux
+base/bin
+gate/bin
+login/bin
+mail/bin

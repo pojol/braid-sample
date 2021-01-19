@@ -2,6 +2,7 @@ package bbcards
 
 import (
 	"braid-game/bot/bbprefab"
+	"braid-game/proto/request"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,14 +13,11 @@ import (
 
 // GuestLoginCard 游客登录
 type GuestLoginCard struct {
-	URL   string
-	delay time.Duration
-	md    *bbprefab.BotData
-}
-
-// GuestLoginRes 游客登录返回
-type GuestLoginRes struct {
-	Token string
+	URL    string
+	delay  time.Duration
+	md     *bbprefab.BotData
+	header map[string]string
+	method string
 }
 
 // NewGuestLoginCard 生成账号创建预制
@@ -28,6 +26,10 @@ func NewGuestLoginCard(md *bbprefab.BotData) *GuestLoginCard {
 		URL:   "/v1/login/guest",
 		delay: time.Millisecond,
 		md:    md,
+		header: map[string]string{
+			"Content-type": "application/json",
+		},
+		method: "POST",
 	}
 }
 
@@ -36,6 +38,9 @@ func (card *GuestLoginCard) GetURL() string { return card.URL }
 
 // GetHeader get card header
 func (card *GuestLoginCard) GetHeader() map[string]string { return nil }
+
+// GetMethod get method
+func (card *GuestLoginCard) GetMethod() string { return card.method }
 
 // SetDelay 设置卡片之间调用的延迟
 func (card *GuestLoginCard) SetDelay(delay time.Duration) { card.delay = delay }
@@ -59,7 +64,7 @@ func (card *GuestLoginCard) Unmarshal(res *http.Response) {
 		fmt.Println(card.GetURL(), "request err", errcode)
 	}
 
-	cres := GuestLoginRes{}
+	cres := request.GuestLoginRes{}
 	b, _ := ioutil.ReadAll(res.Body)
 	err := json.Unmarshal(b, &cres)
 	if err != nil {

@@ -3,6 +3,8 @@ package main
 import (
 	"braid-game/common"
 	"braid-game/login/handle"
+	"braid-game/proto"
+	"braid-game/proto/api"
 	"flag"
 	"log"
 	"os"
@@ -16,7 +18,6 @@ import (
 	"github.com/pojol/braid/modules/discoverconsul"
 	"github.com/pojol/braid/modules/electorconsul"
 	"github.com/pojol/braid/modules/grpcclient"
-	"github.com/pojol/braid/modules/grpcclient/bproto"
 	"github.com/pojol/braid/modules/grpcserver"
 	"github.com/pojol/braid/modules/jaegertracing"
 	"github.com/pojol/braid/modules/linkerredis"
@@ -33,9 +34,6 @@ var (
 	nsqLookupAddr string
 	nsqdAddr      string
 	localPort     int
-
-	// NodeName 节点名
-	NodeName = "login"
 )
 
 func initFlag() {
@@ -82,9 +80,9 @@ func main() {
 
 		id := strconv.Itoa(int(time.Now().UnixNano())) + addr
 		err := common.Regist(common.ConsulRegistReq{
-			Name:    NodeName,
+			Name:    proto.ServiceLogin,
 			ID:      id,
-			Tags:    []string{"braid", NodeName},
+			Tags:    []string{"braid", proto.ServiceLogin},
 			Address: "127.0.0.1",
 			Port:    localPort,
 		}, consulAddr)
@@ -96,7 +94,7 @@ func main() {
 	}
 
 	b, _ := braid.New(
-		NodeName,
+		proto.ServiceLogin,
 		mailboxnsq.WithLookupAddr([]string{nsqLookupAddr}),
 		mailboxnsq.WithNsqdAddr([]string{nsqdAddr}))
 
@@ -117,7 +115,7 @@ func main() {
 			jaegertracing.WithProbabilistic(0.1),
 		))
 
-	bproto.RegisterListenServer(braid.GetServer().(*grpc.Server), &handle.RouteServer{})
+	api.RegisterLoginServer(braid.GetServer().(*grpc.Server), &handle.LoginServer{})
 
 	b.Init()
 	b.Run()

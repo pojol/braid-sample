@@ -1,9 +1,9 @@
 package main
 
 import (
-	"braid-game/api"
 	"braid-game/common"
 	"braid-game/mail/handle"
+	"braid-game/proto/api"
 	"flag"
 	"fmt"
 	"os"

@@ -1,8 +1,7 @@
 package control
 
 import (
-	"braid-game/proto"
-	"context"
+	"braid-game/proto/api"
 	"fmt"
 	"strconv"
 	"time"
@@ -59,29 +58,17 @@ TAG:
 }
 
 // GuestLogin 游客登录
-func GuestLogin(ctx context.Context, token string, reqBody []byte) (interface{}, error) {
-	res := proto.GuestLoginRes{}
+func GuestLogin(res *api.GuestRegistRes) error {
 
 	var err error
 	//token = "token" + GetUniqueID()
-	token = uuid.New().String()
+	res.Token = uuid.New().String()
 
 	time.AfterFunc(time.Minute, func() {
-		fmt.Println("cluster pub", linkerredis.LinkerTopicUnlink, token)
 		braid.Mailbox().Pub(mailbox.Cluster, linkerredis.LinkerTopicUnlink, &mailbox.Message{
-			Body: []byte(token),
+			Body: []byte(res.Token),
 		})
 	})
 
-	res.Token = token
-	fmt.Println("login token", res.Token)
-	return res, err
-}
-
-// Loginout 登出
-func Loginout(ctx context.Context, token string, reqBody []byte) (interface{}, error) {
-
-	fmt.Println("loginout token", token)
-
-	return []byte{}, nil
+	return err
 }

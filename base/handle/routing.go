@@ -1,45 +1,44 @@
 package handle
 
 import (
-	"braid-game/base/control"
+	"braid-game/errcode"
+	"braid-game/proto"
+	"braid-game/proto/api"
 	"context"
-	"encoding/json"
+	"errors"
 
-	"github.com/pojol/braid/modules/grpcclient/bproto"
+	"github.com/pojol/braid"
 )
 
-// RouteServer 路由服务器
-type RouteServer struct {
-	bproto.ListenServer
+// BaseServer 基础业务服务节点
+type BaseServer struct {
+	api.BaseServer
 }
 
-// RouteHandle 路由函数句柄
-type RouteHandle func(ctx context.Context, token string, reqBody []byte) (res interface{}, err error)
+// AccRename rename
+func (bs *BaseServer) AccRename(ctx context.Context, req *api.AccRenameReq) (res *api.AccRenameRes, err error) {
 
-var (
-	routeMap map[string]RouteHandle
-)
+	res = new(api.AccRenameRes)
 
-// Routing 接收外界路由过来的（通常是gate）消息
-func (rs *RouteServer) Routing(ctx context.Context, req *bproto.RouteReq) (*bproto.RouteRes, error) {
-	res := new(bproto.RouteRes)
+	res.Nickname = req.Nickname
+	mailRes := &api.SendMailRes{}
 
-	if _, ok := routeMap[req.Service]; ok {
-		ires, err := routeMap[req.Service](ctx, req.Token, req.ReqBody)
-		if err != nil {
-			return nil, err
-		}
-		res.ResBody, err = json.Marshal(ires)
-		if err != nil {
-			return nil, err
-		}
+	braid.GetClient().Invoke(ctx,
+		proto.ServiceMail,
+		proto.APIMailSend,
+		req.Token,
+		&api.SendMailReq{
+			Accountid: "test",
+			Body: &api.MailBody{
+				Title: "title",
+			},
+		},
+		mailRes,
+	)
+
+	if mailRes.Errcode != int32(errcode.Succ) {
+		return res, errors.New("send mail fail")
 	}
 
-	return res, nil
-}
-
-func init() {
-	routeMap = make(map[string]RouteHandle)
-
-	routeMap["rename"] = control.Rename
+	return res, err
 }
