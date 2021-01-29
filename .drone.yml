@@ -1,7 +1,16 @@
 kind: pipeline
 name: braid-sample
 
+clone: 
+  disable: true
+
 steps:
+    - name: clone
+      image: alpine/git
+      commands:
+        - git clone https://github.com/pojol/braid-sample.git .
+        - git checkout ${DRONE_TAG}
+
     - name: build
       image: golang:1.13.3
       commands:
