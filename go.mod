@@ -15,10 +15,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pojol/braid v1.2.10
-	github.com/pojol/gobot v1.1.6
+	github.com/pojol/gobot v1.1.7
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 	google.golang.org/grpc v1.27.1
 )
-
-// 切换到本地包进行测试
-replace github.com/pojol/gobot => /Users/pojol/work/gohome/src/gobot
