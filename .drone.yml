@@ -1,0 +1,41 @@
+kind: pipeline
+name: braid
+
+steps:
+    - name: 构建
+      image: golang:1.13.3
+      commands:
+        - pwd
+        - export GOPROXY=https://goproxy.io
+        - export MOCK_REDIS_ADDR=redis://172.18.0.1:6379/0
+        - export MOCK_CONSUL_ADDR=http://172.18.0.1:8900
+        - export MOCK_JAEGER_ADDR=http://172.18.0.1:9411/api/v2/spans
+        - export MOCK_NSQD_ADDR="172.18.0.1:4150"
+        - export MOCK_NSQ_LOOKUPD_ADDR="172.18.0.1:4161"
+        - go version
+        - go build -o base_linux base/main.go
+
+
+    # 测试
+
+    # 推送
+    - name: 推送
+      image: plugins/docker
+      settings:
+        mirror: https://docker.mirrors.ustc.edu.cn
+        username: pojol
+        password: 
+          from_secret: DOCKER_PASSWORD
+        dockerfile: base/bin/Dockerfile
+        repo: registry.cn-hangzhou.aliyuncs.com/braid-game/base
+        registry: registry.cn-hangzhou.aliyuncs.com
+        no_cache:
+        tags:
+          - latest
+      when:
+        branch:
+          - develop
+
+# 交付
+
+# 清理

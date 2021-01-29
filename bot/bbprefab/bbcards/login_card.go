@@ -61,14 +61,14 @@ func (card *GuestLoginCard) Unmarshal(res *http.Response) {
 
 	errcode, _ := strconv.Atoi(res.Header["Errcode"][0])
 	if errcode != 0 {
-		fmt.Println(card.GetURL(), "request err", errcode)
+		fmt.Println(res.Request.URL, card.GetURL(), "request err", errcode)
 	}
 
 	cres := request.GuestLoginRes{}
 	b, _ := ioutil.ReadAll(res.Body)
 	err := json.Unmarshal(b, &cres)
 	if err != nil {
-		fmt.Println(card.GetURL(), "json.Unmarshal", errcode, "token", cres.Token)
+		fmt.Println(res.Request.URL, card.GetURL(), "json.Unmarshal", errcode, "token", cres.Token)
 	}
 
 	card.md.AccToken = cres.Token

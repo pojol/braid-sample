@@ -99,7 +99,9 @@ func main() {
 			electorconsul.Name,
 			electorconsul.WithConsulAddr(consulAddr),
 		),
-		braid.LinkCache(linkerredis.Name, linkerredis.WithRedisAddr(redisAddr)),
+		braid.LinkCache(linkerredis.Name,
+			linkerredis.WithRedisAddr(redisAddr),
+		),
 		braid.Tracing(jaegertracing.Name,
 			jaegertracing.WithHTTP(jaegerAddr),
 			jaegertracing.WithProbabilistic(0.1),
@@ -121,7 +123,7 @@ func main() {
 	}()
 
 	if localPort == 0 {
-		err = e.Start(":14222")
+		err = e.Start(":14001")
 	} else {
 		err = e.Start(":" + strconv.Itoa(localPort))
 	}

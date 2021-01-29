@@ -71,6 +71,6 @@ func (card *RenameCard) Unmarshal(res *http.Response) {
 
 	errcode, _ := strconv.Atoi(res.Header["Errcode"][0])
 	if errcode != 0 {
-		fmt.Println(card.GetURL(), "request err", errcode)
+		fmt.Println(res.Request.URL, card.GetURL(), "request err", errcode)
 	}
 }

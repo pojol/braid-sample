@@ -54,7 +54,7 @@ func main() {
 
 	var rpcserver braid.Module
 	if localPort == 0 {
-		rpcserver = braid.Server(grpcserver.Name)
+		rpcserver = braid.Server(grpcserver.Name, grpcserver.WithListen(":14301"))
 	} else {
 		addr := ":" + strconv.Itoa(localPort)
 		rpcserver = braid.Server(grpcserver.Name, grpcserver.WithListen(addr))

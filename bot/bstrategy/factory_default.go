@@ -19,7 +19,9 @@ func FactoryDefault(addr string, client *http.Client) *bot.Bot {
 	}, client, md)
 
 	bot.Timeline.AddStep(bbsteps.NewGuestLoginStep(md))
-	bot.Timeline.AddDelayStep(bbsteps.NewRenameStep(md), time.Second)
+	for i := 0; i < 10; i++ {
+		bot.Timeline.AddDelayStep(bbsteps.NewRenameStep(md), time.Millisecond*100)
+	}
 
 	return bot
 }
