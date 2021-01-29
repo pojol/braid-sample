@@ -9,7 +9,7 @@ steps:
       image: alpine/git
       commands:
         - git clone https://gitclone.com/github.com/pojol/braid-sample.git .
-        - git checkout "origin/${DRONE_BRANCH}"
+        - git checkout origin/${DRONE_BRANCH}
 
     - name: build
       image: golang:1.13.3
