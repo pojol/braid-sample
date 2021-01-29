@@ -8,8 +8,7 @@ steps:
     - name: clone
       image: alpine/git
       commands:
-        - git clone https://gitclone.com/github.com/pojol/braid-sample.git .
-        - git branch remotes/origin/${DRONE_BRANCH}
+        - git clone https://gitclone.com/github.com/pojol/braid-game.git .
         - git checkout -b ${DRONE_BRANCH} remotes/origin/${DRONE_BRANCH}
 
     - name: build
@@ -22,8 +21,6 @@ steps:
         - export MOCK_NSQD_ADDR="172.18.0.1:4150"
         - export MOCK_NSQ_LOOKUPD_ADDR="172.18.0.1:4161"
         - go version
-        - ls
-        - cat go.mod
         - go build -o base_linux base/main.go
 
 
