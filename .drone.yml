@@ -9,8 +9,8 @@ steps:
       image: alpine/git
       commands:
         - git clone https://gitclone.com/github.com/pojol/braid-sample.git .
-        - echo ${DRONE_TAG}
-        - git checkout ${DRONE_TAG}
+        - echo ${DRONE_BRANCH}
+        - git checkout ${DRONE_BRANCH}
 
     - name: build
       image: golang:1.13.3
