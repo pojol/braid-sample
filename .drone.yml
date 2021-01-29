@@ -9,6 +9,7 @@ steps:
       image: alpine/git
       commands:
         - git clone https://gitclone.com/github.com/pojol/braid-sample.git .
+        - echo ${DRONE_TAG}
         - git checkout ${DRONE_TAG}
 
     - name: build
