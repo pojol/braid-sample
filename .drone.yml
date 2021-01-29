@@ -2,7 +2,7 @@ kind: pipeline
 name: braid
 
 steps:
-    - name: 构建
+    - name: builder
       image: golang:1.13.3
       commands:
         - pwd
@@ -17,9 +17,13 @@ steps:
 
 
     # 测试
+    - name: testing
+      image: golang:1.13.3
+      commands:
+        - go test
 
     # 推送
-    - name: 推送
+    - name: pushing
       image: plugins/docker
       settings:
         mirror: https://docker.mirrors.ustc.edu.cn
@@ -37,5 +41,6 @@ steps:
           - develop
 
 # 交付
-
+    - name: deploying
+      image: curlimages/curl
 # 清理
