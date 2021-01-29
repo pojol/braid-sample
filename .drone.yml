@@ -11,7 +11,7 @@ steps:
         - git clone https://gitclone.com/github.com/pojol/braid-sample.git .
         - echo ${origin/##DRONE_BRANCH}
         - git branch
-        - git checkout ${origin/##DRONE_BRANCH}
+        - git checkout "origin/${originDRONE_BRANCH}"
 
     - name: build
       image: golang:1.13.3
